@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(182, 81, 44, 0.14), transparent 24%),
+    radial-gradient(circle at top right, rgba(32, 65, 58, 0.12), transparent 30%),
+    linear-gradient(180deg, #f6f2ea 0%, #f5efe4 100%);
+}
+
+body {
+  min-height: 100vh;
+  color: #111111;
+  background: transparent;
+}
+
+::selection {
+  background: rgba(182, 81, 44, 0.22);
+}
+
+/* The evidence gesture: a quote in the report selects its source in the resume. */
+textarea::selection {
+  background: rgba(182, 81, 44, 0.34);
+}
+
+/*
+ * The one authored moment: a stage landing when the model actually returns it.
+ * Settles out of blur rather than sliding, so the row reads as resolving into
+ * focus instead of arriving from somewhere else.
+ */
+@keyframes stage-settle {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+    filter: blur(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.stage-settle {
+  animation: stage-settle 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Indeterminate on purpose: the run has no honest percentage to report. */
+@keyframes reading-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.reading-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 33%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(32, 65, 58, 0.85), transparent);
+  animation: reading-sweep 1500ms cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-settle {
+    animation: none;
+  }
+
+  .reading-sweep::after {
+    animation: none;
+    width: 100%;
+    background: rgba(32, 65, 58, 0.5);
+  }
+}
