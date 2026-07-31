@@ -87,6 +87,38 @@ Go-to-market strategy, positioning and messaging, customer research, competitive
 
 const sampleResume = resumeExamples[0].text;
 
+async function extractPdfText(file: File) {
+  const pdfjs = await import("pdfjs-dist");
+
+  // Keep the worker bundled with the app rather than sending a resume to a CDN.
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url
+  ).toString();
+
+  const loadingTask = pdfjs.getDocument({
+    data: new Uint8Array(await file.arrayBuffer())
+  });
+
+  try {
+    const document = await loadingTask.promise;
+    const pages = await Promise.all(
+      Array.from({ length: document.numPages }, async (_, index) => {
+        const page = await document.getPage(index + 1);
+        const content = await page.getTextContent();
+
+        return content.items
+          .map((item) => ("str" in item ? item.str : ""))
+          .join(" ");
+      })
+    );
+
+    return pages.join("\n\n");
+  } finally {
+    await loadingTask.destroy();
+  }
+}
+
 const runStateLabels: Record<RunState, string> = {
   idle: "not started",
   running: "reading",
@@ -244,8 +276,10 @@ export function ResumeAnalyzer() {
       return;
     }
 
-    if (!file.name.toLowerCase().endsWith(".docx")) {
-      setError("Choose a Microsoft Word (.docx) file.");
+    const extension = file.name.toLowerCase().split(".").pop();
+
+    if (extension !== "docx" && extension !== "pdf") {
+      setError("Choose a Microsoft Word (.docx) or PDF (.pdf) file.");
       return;
     }
 
@@ -258,13 +292,22 @@ export function ResumeAnalyzer() {
     setDocumentName(null);
 
     try {
-      const { value } = await mammoth.extractRawText({
-        arrayBuffer: await file.arrayBuffer()
-      });
-      const extractedText = value.trim();
+      const extractedText = (
+        extension === "pdf"
+          ? await extractPdfText(file)
+          : (
+              await mammoth.extractRawText({
+                arrayBuffer: await file.arrayBuffer()
+              })
+            ).value
+      ).trim();
 
       if (!extractedText) {
-        throw new Error("No readable text was found in that document.");
+        throw new Error(
+          extension === "pdf"
+            ? "No selectable text was found. This may be a scanned PDF."
+            : "No readable text was found in that document."
+        );
       }
 
       setResumeText(extractedText);
@@ -272,8 +315,8 @@ export function ResumeAnalyzer() {
     } catch (documentError) {
       setError(
         documentError instanceof Error
-          ? `Could not read this DOCX file: ${documentError.message}`
-          : "Could not read this DOCX file."
+          ? `Could not read this document: ${documentError.message}`
+          : "Could not read this document."
       );
     }
   }
@@ -405,14 +448,14 @@ export function ResumeAnalyzer() {
             <Field
               label="Resume document (optional)"
               htmlFor="resume-document"
-              hint={`Microsoft Word (.docx), up to 10 MB. Text is extracted in your browser and replaces the field below.${
+              hint={`Microsoft Word (.docx) or PDF (.pdf), up to 10 MB. Text is extracted in your browser and replaces the field below.${
                 documentName ? ` Loaded: ${documentName}` : ""
               }`}
             >
               <input
                 id="resume-document"
                 type="file"
-                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                 onChange={handleDocumentChange}
                 className="block w-full cursor-pointer rounded-2xl border border-black/10 bg-paper px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rust/60"
               />
