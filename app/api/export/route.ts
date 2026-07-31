@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { SCORE_MAX } from "@/lib/pipeline/scoring";
 import { AnalysisReport } from "@/lib/types";
 
 const requestSchema = z.object({
@@ -30,10 +31,14 @@ Created at: ${report.createdAt}
 
 ## Scorecard
 
-- Overall: ${report.scorecard.overallScore}
-- ATS: ${report.scorecard.atsScore ?? "N/A"}
-- Truthfulness confidence: ${report.scorecard.truthfulnessConfidence}
-- Interview readiness: ${report.scorecard.interviewReadiness}
+- Overall: ${report.scorecard.overallScore} / ${SCORE_MAX.overallScore}
+- ATS: ${
+    report.scorecard.atsScore === undefined
+      ? "not scored"
+      : `${report.scorecard.atsScore} / ${SCORE_MAX.atsScore}`
+  }
+- Truthfulness confidence: ${report.scorecard.truthfulnessConfidence} / ${SCORE_MAX.truthfulnessConfidence}
+- Interview readiness: ${report.scorecard.interviewReadiness} / ${SCORE_MAX.interviewReadiness}
 
 ## Top improvements
 
