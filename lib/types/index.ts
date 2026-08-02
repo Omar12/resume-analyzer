@@ -6,6 +6,7 @@ export type AnalysisStageId =
   | "ats-match"
   | "achievement-mining"
   | "story-review"
+  | "proofread"
   | "rewrite";
 
 export interface StageDefinition {
@@ -79,4 +80,6 @@ export interface AnalyzeRequestPayload {
   targetRole?: string;
   /** Notes answered in a downloaded follow-up workbook. These are context, not resume evidence. */
   followUpContext?: string;
+  /** Original report text from a follow-up workbook, supplied only for proofreading. */
+  uploadedAnalysis?: string;
 }

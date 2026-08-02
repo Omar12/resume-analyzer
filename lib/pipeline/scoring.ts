@@ -16,8 +16,10 @@ export const SCORE_MAX = {
 } as const;
 
 export function buildScorecard(stageResults: StageResult[]) {
-  const allFindings = stageResults.flatMap((stage) => stage.findings);
-  const unsupportedClaims = stageResults.flatMap(
+  // Proofreading findings are copy edits; they should not lower the resume's strategic score.
+  const scoredStages = stageResults.filter((stage) => stage.stageId !== "proofread");
+  const allFindings = scoredStages.flatMap((stage) => stage.findings);
+  const unsupportedClaims = scoredStages.flatMap(
     (stage) => stage.guardrail.unsupportedClaims
   ).length;
 

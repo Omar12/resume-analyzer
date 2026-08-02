@@ -6,6 +6,7 @@ const stageLabels: Record<AnalysisStageId, string> = {
   "ats-match": "ATS match",
   "achievement-mining": "Achievement mining",
   "story-review": "Career story",
+  proofread: "Proofread",
   rewrite: "Evidence-safe rewrite"
 };
 

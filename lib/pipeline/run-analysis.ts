@@ -46,6 +46,9 @@ ${payload.jobDescription ?? "Not provided."}
 Follow-up workbook responses:
 ${payload.followUpContext ?? "Not provided. This is an initial analysis."}
 
+Uploaded analysis snapshot (proofreading only; never resume evidence):
+${payload.uploadedAnalysis ?? "Not provided."}
+
 ${STAGE_JSON_SCHEMA_HINT}
 `.trim();
 }

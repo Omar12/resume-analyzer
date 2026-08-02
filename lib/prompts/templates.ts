@@ -57,6 +57,13 @@ Assess focus, progression, seniority signals, consistency, and whether the docum
 Provide 3-6 findings with severity, whyItMatters, recommendation, and evidence.
 Also provide an honest summary, up to 5 follow-up questions, and a guardrail object tracking unsupported claims.
 `,
+  proofread: (context) => `
+${baseGuardrails}
+
+Task: Proofread all submitted material for a ${context.targetRole}. Check the resume, follow-up workbook responses, and uploaded analysis snapshot when present for spelling, grammar, punctuation, inconsistent capitalization, unclear wording, and contradictory terminology.
+Do not critique strategy, add achievements, or rewrite whole sections. Report only concrete corrections. For resume corrections, cite the exact resume text as evidence. For corrections in workbook responses or the uploaded analysis snapshot, start the finding title with "Workbook:" or "Analysis:" and leave evidence empty because those sources are not resume evidence.
+Provide 0-8 findings, a concise summary, no follow-up questions unless a correction is ambiguous, and a guardrail object.
+`,
   rewrite: (context) => `
 ${baseGuardrails}
 

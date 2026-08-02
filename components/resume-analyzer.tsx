@@ -158,7 +158,10 @@ export function ResumeAnalyzer() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState<string | null>(null);
   const [followUpContext, setFollowUpContext] = useState<string | null>(null);
+  const [uploadedAnalysis, setUploadedAnalysis] = useState<string | null>(null);
   const [followUpWorkbookLoaded, setFollowUpWorkbookLoaded] = useState(false);
+  const [followUpWorkbookText, setFollowUpWorkbookText] = useState("");
+  const [showFollowUpWorkflow, setShowFollowUpWorkflow] = useState(false);
   const [tracedQuote, setTracedQuote] = useState<{
     quote: string;
     found: boolean;
@@ -214,7 +217,8 @@ export function ResumeAnalyzer() {
           resumeText,
           targetRole,
           ...(hasJobDescription ? { jobDescription } : {}),
-          ...(followUpContext ? { followUpContext } : {})
+          ...(followUpContext ? { followUpContext } : {}),
+          ...(uploadedAnalysis ? { uploadedAnalysis } : {})
         })
       });
 
@@ -279,6 +283,27 @@ export function ResumeAnalyzer() {
     }
   }
 
+  function loadFollowUpWorkbook(markdown: string, sourceName?: string) {
+    const workbook = parseFollowUpMarkdown(markdown);
+    if (!workbook) {
+      setError(
+        "Paste the complete resume-analysis.md workbook, including an Updated resume section with at least 80 characters."
+      );
+      return false;
+    }
+
+    setError(null);
+    setResumeText(workbook.resumeText);
+    setTargetRole(workbook.targetRole ?? targetRole);
+    setJobDescription(workbook.jobDescription ?? "");
+    setShowJobDescription(Boolean(workbook.jobDescription));
+    setFollowUpContext(workbook.followUpContext ?? null);
+    setUploadedAnalysis(workbook.analysisSnapshot ?? null);
+    setFollowUpWorkbookLoaded(true);
+    setDocumentName(sourceName ?? "Pasted follow-up workbook");
+    return true;
+  }
+
   async function handleDocumentChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -302,24 +327,15 @@ export function ResumeAnalyzer() {
     setError(null);
     setDocumentName(null);
     setFollowUpContext(null);
+    setUploadedAnalysis(null);
     setFollowUpWorkbookLoaded(false);
 
     try {
       if (extension === "md") {
-        const workbook = parseFollowUpMarkdown(await file.text());
-        if (!workbook) {
-          throw new Error(
-            "This is not a complete resume-analysis.md workbook, or its Updated resume section is too short."
-          );
-        }
-
-        setResumeText(workbook.resumeText);
-        setTargetRole(workbook.targetRole ?? targetRole);
-        setJobDescription(workbook.jobDescription ?? "");
-        setShowJobDescription(Boolean(workbook.jobDescription));
-        setFollowUpContext(workbook.followUpContext ?? null);
-        setFollowUpWorkbookLoaded(true);
-        setDocumentName(file.name);
+        const markdown = await file.text();
+        setFollowUpWorkbookText(markdown);
+        setShowFollowUpWorkflow(true);
+        loadFollowUpWorkbook(markdown, file.name);
         return;
       }
 
@@ -343,6 +359,7 @@ export function ResumeAnalyzer() {
 
       setResumeText(extractedText);
       setDocumentName(file.name);
+      setFollowUpWorkbookText("");
     } catch (documentError) {
       setError(
         documentError instanceof Error
@@ -466,6 +483,67 @@ export function ResumeAnalyzer() {
           </div>
 
           <div className="mt-8 flex flex-col gap-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white/60 px-4 py-3">
+              <p className="text-sm leading-6 text-black/70">
+                Have you completed the follow-up workbook?
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowFollowUpWorkflow((current) => !current)}
+                aria-expanded={showFollowUpWorkflow}
+                className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold outline-none transition hover:border-black/25 focus-visible:ring-2 focus-visible:ring-rust/50"
+              >
+                {showFollowUpWorkflow ? "Use standard resume input" : "Yes, load follow-up"}
+              </button>
+            </div>
+
+            {showFollowUpWorkflow ? (
+              <>
+                <Field
+                  label="Completed follow-up workbook"
+                  htmlFor="follow-up-workbook"
+                  hint="Paste the complete resume-analysis.md you downloaded after filling it in, then load it for a follow-up analysis."
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => loadFollowUpWorkbook(followUpWorkbookText)}
+                      disabled={!followUpWorkbookText.trim()}
+                      className="rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-xs font-semibold outline-none transition hover:border-black/25 focus-visible:ring-2 focus-visible:ring-rust/50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Load workbook
+                    </button>
+                  }
+                >
+                  <textarea
+                    id="follow-up-workbook"
+                    value={followUpWorkbookText}
+                    onChange={(event) => setFollowUpWorkbookText(event.target.value)}
+                    className="min-h-[16rem] w-full rounded-3xl border border-black/10 bg-paper px-4 py-4 font-mono text-sm leading-6 outline-none transition focus:border-rust/40 focus:ring-2 focus:ring-rust/45"
+                    placeholder="Paste the complete # Resume Analysis Follow-up Workbook here..."
+                  />
+                </Field>
+
+                <Field
+                  label="Or upload the completed workbook"
+                  htmlFor="follow-up-document"
+                  hint="Choose the full resume-analysis.md file you downloaded."
+                >
+                  <input
+                    id="follow-up-document"
+                    type="file"
+                    accept=".md,text/markdown"
+                    onChange={handleDocumentChange}
+                    className="block w-full cursor-pointer rounded-2xl border border-black/10 bg-paper px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rust/60"
+                  />
+                  {followUpWorkbookLoaded ? (
+                    <p className="mt-3 rounded-2xl bg-pine/5 px-4 py-3 text-sm leading-6 text-pine">
+                      Follow-up workbook loaded. This run uses the updated resume as evidence and checks any responses as context.
+                    </p>
+                  ) : null}
+                </Field>
+              </>
+            ) : (
+              <>
             <Field label="Target role" htmlFor="target-role">
               <input
                 id="target-role"
@@ -515,7 +593,9 @@ export function ResumeAnalyzer() {
                         setTargetRole(example.role);
                         setDocumentName(null);
                         setFollowUpContext(null);
+                        setUploadedAnalysis(null);
                         setFollowUpWorkbookLoaded(false);
+                        setFollowUpWorkbookText("");
                         setTracedQuote(null);
                       }}
                       aria-pressed={isSelected}
@@ -545,7 +625,9 @@ export function ResumeAnalyzer() {
                       onClick={() => {
                         setResumeText("");
                         setFollowUpContext(null);
+                        setUploadedAnalysis(null);
                         setFollowUpWorkbookLoaded(false);
+                        setFollowUpWorkbookText("");
                         resumeRef.current?.focus();
                       }}
                       className="rounded-sm font-semibold text-rust underline underline-offset-2 outline-none transition hover:text-ink focus-visible:ring-2 focus-visible:ring-rust/40"
@@ -607,6 +689,8 @@ export function ResumeAnalyzer() {
                 </Field>
               ) : null}
             </div>
+              </>
+            )}
           </div>
 
           <div className="mt-8 border-t border-black/10 pt-6">

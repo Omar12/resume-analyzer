@@ -27,6 +27,11 @@ export const PIPELINE_STAGES: StageDefinition[] = [
     goal: "Test whether the resume tells a coherent progression toward the target role."
   },
   {
+    id: "proofread",
+    label: "Proofread",
+    goal: "Catch spelling, grammar, punctuation, and consistency issues in the submitted material."
+  },
+  {
     id: "rewrite",
     label: "Evidence-safe rewrite",
     goal: "Rewrite phrasing without inventing new achievements, metrics, or scope."

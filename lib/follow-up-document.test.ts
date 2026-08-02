@@ -53,6 +53,7 @@ This must not become part of the resume.`;
   assert.equal(parsed.resumeText, resume);
   assert.match(parsed.followUpContext ?? "", /52 to 19 minutes/);
   assert.match(parsed.followUpContext ?? "", /1,200 enterprise customers/);
+  assert.equal(parsed.analysisSnapshot, "This must not become part of the resume.");
   assert.doesNotMatch(parsed.resumeText, /must not become part/);
 });
 

@@ -32,6 +32,7 @@ export interface FollowUpWorkbook {
   targetRole?: string;
   jobDescription?: string;
   followUpContext?: string;
+  analysisSnapshot?: string;
 }
 
 export function buildFollowUpMarkdown(report: AnalysisReport) {
@@ -122,6 +123,7 @@ export function parseFollowUpMarkdown(markdown: string): FollowUpWorkbook | null
     jobDescription: section(markdown, "Job description (optional)") || undefined,
     followUpContext: responses.length
       ? responses.map((response, index) => `${index + 1}. ${response}`).join("\n")
-      : undefined
+      : undefined,
+    analysisSnapshot: section(markdown, "Original analysis snapshot").slice(0, 30_000) || undefined
   };
 }
