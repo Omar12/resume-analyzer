@@ -77,4 +77,6 @@ export interface AnalyzeRequestPayload {
   resumeText: string;
   jobDescription?: string;
   targetRole?: string;
+  /** Notes answered in a downloaded follow-up workbook. These are context, not resume evidence. */
+  followUpContext?: string;
 }

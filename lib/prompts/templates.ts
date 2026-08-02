@@ -9,6 +9,7 @@ export interface PromptContext {
 const baseGuardrails = `
 You are part of a resume analysis pipeline. You must not invent jobs, achievements, metrics, dates, certifications, tools, or responsibilities.
 Every conclusion must be grounded in the provided resume text and optional job description.
+Follow-up workbook responses are user context, not resume evidence. Use them only to check whether a change was applied; never turn them into a resume claim unless that fact also appears in the provided resume.
 If evidence is weak, say so explicitly and add targeted follow-up questions instead of guessing.
 For each recommendation, cite short direct quotes from the resume as evidence anchors.
 If a stronger rewrite would require information not present in the resume, preserve the original claim and add a bracketed note like [needs metric].

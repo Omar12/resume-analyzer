@@ -11,6 +11,7 @@ import {
   useState
 } from "react";
 import { findQuoteRange } from "@/lib/evidence";
+import { parseFollowUpMarkdown } from "@/lib/follow-up-document";
 import { SCORE_MAX } from "@/lib/pipeline/scoring";
 import { PIPELINE_STAGES } from "@/lib/pipeline/stages";
 import {
@@ -156,6 +157,8 @@ export function ResumeAnalyzer() {
   const [error, setError] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState<string | null>(null);
+  const [followUpContext, setFollowUpContext] = useState<string | null>(null);
+  const [followUpWorkbookLoaded, setFollowUpWorkbookLoaded] = useState(false);
   const [tracedQuote, setTracedQuote] = useState<{
     quote: string;
     found: boolean;
@@ -210,7 +213,8 @@ export function ResumeAnalyzer() {
         body: JSON.stringify({
           resumeText,
           targetRole,
-          ...(hasJobDescription ? { jobDescription } : {})
+          ...(hasJobDescription ? { jobDescription } : {}),
+          ...(followUpContext ? { followUpContext } : {})
         })
       });
 
@@ -285,8 +289,8 @@ export function ResumeAnalyzer() {
 
     const extension = file.name.toLowerCase().split(".").pop();
 
-    if (extension !== "docx" && extension !== "pdf") {
-      setError("Choose a Microsoft Word (.docx) or PDF (.pdf) file.");
+    if (extension !== "docx" && extension !== "pdf" && extension !== "md") {
+      setError("Choose a follow-up Markdown (.md), Microsoft Word (.docx), or PDF (.pdf) file.");
       return;
     }
 
@@ -297,8 +301,28 @@ export function ResumeAnalyzer() {
 
     setError(null);
     setDocumentName(null);
+    setFollowUpContext(null);
+    setFollowUpWorkbookLoaded(false);
 
     try {
+      if (extension === "md") {
+        const workbook = parseFollowUpMarkdown(await file.text());
+        if (!workbook) {
+          throw new Error(
+            "This is not a complete resume-analysis.md workbook, or its Updated resume section is too short."
+          );
+        }
+
+        setResumeText(workbook.resumeText);
+        setTargetRole(workbook.targetRole ?? targetRole);
+        setJobDescription(workbook.jobDescription ?? "");
+        setShowJobDescription(Boolean(workbook.jobDescription));
+        setFollowUpContext(workbook.followUpContext ?? null);
+        setFollowUpWorkbookLoaded(true);
+        setDocumentName(file.name);
+        return;
+      }
+
       const extractedText = (
         extension === "pdf"
           ? await extractPdfText(file)
@@ -455,17 +479,22 @@ export function ResumeAnalyzer() {
             <Field
               label="Resume document (optional)"
               htmlFor="resume-document"
-              hint={`Microsoft Word (.docx) or PDF (.pdf), up to 10 MB. Text is extracted in your browser and replaces the field below.${
+              hint={`Microsoft Word (.docx), PDF (.pdf), or a downloaded follow-up Markdown (.md) workbook, up to 10 MB. The resume is extracted in your browser and replaces the field below.${
                 documentName ? ` Loaded: ${documentName}` : ""
-              }`}
+              } Markdown uploads must be the full resume-analysis.md workbook downloaded here.`}
             >
               <input
                 id="resume-document"
                 type="file"
-                accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                accept=".md,text/markdown,.docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                 onChange={handleDocumentChange}
                 className="block w-full cursor-pointer rounded-2xl border border-black/10 bg-paper px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rust/60"
               />
+              {followUpWorkbookLoaded ? (
+                <p className="mt-3 rounded-2xl bg-pine/5 px-4 py-3 text-sm leading-6 text-pine">
+                  Follow-up workbook loaded. This run uses the updated resume as evidence and checks any responses as context.
+                </p>
+              ) : null}
             </Field>
 
             <div>
@@ -485,6 +514,8 @@ export function ResumeAnalyzer() {
                         setResumeText(example.text);
                         setTargetRole(example.role);
                         setDocumentName(null);
+                        setFollowUpContext(null);
+                        setFollowUpWorkbookLoaded(false);
                         setTracedQuote(null);
                       }}
                       aria-pressed={isSelected}
@@ -513,6 +544,8 @@ export function ResumeAnalyzer() {
                       type="button"
                       onClick={() => {
                         setResumeText("");
+                        setFollowUpContext(null);
+                        setFollowUpWorkbookLoaded(false);
                         resumeRef.current?.focus();
                       }}
                       className="rounded-sm font-semibold text-rust underline underline-offset-2 outline-none transition hover:text-ink focus-visible:ring-2 focus-visible:ring-rust/40"
@@ -727,7 +760,7 @@ export function ResumeAnalyzer() {
                 onClick={() => handleExport("markdown")}
                 className="rounded-full border border-black/10 bg-white/70 px-5 py-3 text-sm font-semibold outline-none transition hover:border-black/25 focus-visible:ring-2 focus-visible:ring-rust/50"
               >
-                Export Markdown
+                Download follow-up workbook
               </button>
               <div className="group relative">
                 <button

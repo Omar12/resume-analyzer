@@ -43,6 +43,9 @@ ${payload.resumeText}
 Job description:
 ${payload.jobDescription ?? "Not provided."}
 
+Follow-up workbook responses:
+${payload.followUpContext ?? "Not provided. This is an initial analysis."}
+
 ${STAGE_JSON_SCHEMA_HINT}
 `.trim();
 }

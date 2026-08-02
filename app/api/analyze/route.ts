@@ -6,7 +6,8 @@ import { AnalysisEvent } from "@/lib/types";
 const requestSchema = z.object({
   resumeText: z.string().min(80, "Resume text should be at least 80 characters."),
   jobDescription: z.string().optional(),
-  targetRole: z.string().optional()
+  targetRole: z.string().optional(),
+  followUpContext: z.string().max(20_000).optional()
 });
 
 export async function POST(request: NextRequest) {
