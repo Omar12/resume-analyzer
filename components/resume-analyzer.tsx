@@ -790,7 +790,11 @@ export function ResumeAnalyzer() {
 
           {report.topImprovements.length ? (
             <Card className="p-6 md:p-8">
-              <h3 className="font-display text-2xl">Top improvements</h3>
+              <h3 className="font-display text-2xl">Your recommended next steps</h3>
+              <p className="mt-2 max-w-[68ch] text-sm leading-6 text-black/70">
+                These are action items for you to review and apply—they have not been
+                made to your resume automatically.
+              </p>
               <ol className="mt-5 flex flex-col gap-2">
                 {report.topImprovements.map((item, index) => (
                   <li
@@ -804,6 +808,27 @@ export function ResumeAnalyzer() {
                   </li>
                 ))}
               </ol>
+              <div className="mt-6 rounded-2xl bg-pine/5 px-4 py-4">
+                <h4 className="text-sm font-semibold text-pine">How to use this report</h4>
+                <ol className="mt-2 flex max-w-[68ch] flex-col gap-2 text-sm leading-6 text-black/75">
+                  <li>1. Start with the highest-impact item you can support with real evidence.</li>
+                  <li>2. Update your resume using the rewrite draft as a starting point; verify every metric and claim before keeping it.</li>
+                  <li>3. Re-run the analysis after your edits to check the revised version.</li>
+                </ol>
+                <div className="mt-4 max-w-[68ch] rounded-xl border border-pine/15 bg-white/70 px-4 py-3 text-sm leading-6 text-black/75">
+                  <p className="font-semibold text-ink">Example: make a responsibility show impact</p>
+                  <p className="mt-1">
+                    Before: “Managed release quality.”
+                    <br />
+                    After: “Introduced release checks that reduced production incidents by
+                    [verified percentage].”
+                  </p>
+                  <p className="mt-2 text-xs leading-5 text-black/60">
+                    Replace the bracketed detail only with a metric you can verify; otherwise,
+                    keep the statement qualitative.
+                  </p>
+                </div>
+              </div>
             </Card>
           ) : null}
 
