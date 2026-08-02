@@ -85,8 +85,6 @@ Go-to-market strategy, positioning and messaging, customer research, competitive
   }
 ] as const;
 
-const sampleResume = resumeExamples[0].text;
-
 async function extractPdfText(file: File) {
   const pdfjs = await import("pdfjs-dist");
 
@@ -148,8 +146,9 @@ function prefersReducedMotion() {
 }
 
 export function ResumeAnalyzer() {
-  const [resumeText, setResumeText] = useState<string>(sampleResume);
+  const [resumeText, setResumeText] = useState<string>("");
   const [jobDescription, setJobDescription] = useState("");
+  const [showJobDescription, setShowJobDescription] = useState(false);
   const [targetRole, setTargetRole] = useState("Senior Software Engineer");
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [liveStages, setLiveStages] = useState<StageResult[]>([]);
@@ -170,8 +169,12 @@ export function ResumeAnalyzer() {
   const isSample = Boolean(selectedExample);
   const isRunning = runState === "running";
   const tooShort = resumeText.trim().length < 80;
+  const hasJobDescription = showJobDescription && jobDescription.trim().length > 0;
+  const activeStages = PIPELINE_STAGES.filter(
+    (stage) => stage.id !== "ats-match" || hasJobDescription
+  );
   const runningIndex = isRunning ? liveStages.length : -1;
-  const runningStage = runningIndex >= 0 ? PIPELINE_STAGES[runningIndex] : null;
+  const runningStage = runningIndex >= 0 ? activeStages[runningIndex] : null;
 
   const completedStages = useMemo(
     () => liveStages.filter((stage) => !stage.failed).length,
@@ -204,7 +207,11 @@ export function ResumeAnalyzer() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText, jobDescription, targetRole })
+        body: JSON.stringify({
+          resumeText,
+          targetRole,
+          ...(hasJobDescription ? { jobDescription } : {})
+        })
       });
 
       if (!response.ok) {
@@ -541,15 +548,32 @@ export function ResumeAnalyzer() {
               ) : null}
             </Field>
 
-            <Field label="Job description (optional)" htmlFor="job-description">
-              <textarea
-                id="job-description"
-                value={jobDescription}
-                onChange={(event) => setJobDescription(event.target.value)}
-                className="min-h-[10rem] w-full rounded-3xl border border-black/10 bg-paper px-4 py-4 leading-6 outline-none transition focus:border-rust/40 focus:ring-2 focus:ring-rust/45"
-                placeholder="Paste the target role description if you want ATS matching..."
-              />
-            </Field>
+            <div>
+              <label className="flex w-fit cursor-pointer items-center gap-3 text-sm font-semibold text-black/80">
+                <input
+                  type="checkbox"
+                  checked={showJobDescription}
+                  onChange={(event) => setShowJobDescription(event.target.checked)}
+                  className="h-4 w-4 rounded border-black/20 text-rust focus:ring-2 focus:ring-rust/45"
+                />
+                Add a job description for ATS matching
+              </label>
+              {showJobDescription ? (
+                <Field
+                  label="Job description"
+                  htmlFor="job-description"
+                  hint="ATS matching starts only when this field contains a job description."
+                >
+                  <textarea
+                    id="job-description"
+                    value={jobDescription}
+                    onChange={(event) => setJobDescription(event.target.value)}
+                    className="min-h-[10rem] w-full rounded-3xl border border-black/10 bg-paper px-4 py-4 leading-6 outline-none transition focus:border-rust/40 focus:ring-2 focus:ring-rust/45"
+                    placeholder="Paste the target role description..."
+                  />
+                </Field>
+              ) : null}
+            </div>
           </div>
 
           <div className="mt-8 border-t border-black/10 pt-6">
@@ -602,23 +626,23 @@ export function ResumeAnalyzer() {
               }
             >
               {isRunning
-                ? `${liveStages.length} of ${PIPELINE_STAGES.length}`
+                ? `${liveStages.length} of ${activeStages.length}`
                 : runStateLabels[runState]}
             </Pill>
           </div>
 
           <p className="sr-only" role="status" aria-live="polite">
             {isRunning && runningStage
-              ? `Stage ${liveStages.length + 1} of ${PIPELINE_STAGES.length}: ${runningStage.label} in progress.`
+              ? `Stage ${liveStages.length + 1} of ${activeStages.length}: ${runningStage.label} in progress.`
               : runState === "done"
-                ? `Analysis complete. ${completedStages} of ${PIPELINE_STAGES.length} stages returned results.`
+                ? `Analysis complete. ${completedStages} of ${activeStages.length} stages returned results.`
                 : runState === "error"
                   ? "The analysis stopped before it finished."
                   : ""}
           </p>
 
           <ol className="mt-6 flex flex-col gap-2">
-            {PIPELINE_STAGES.map((stage, index) => {
+            {activeStages.map((stage, index) => {
               const result = liveStages[index];
               const isStageRunning = index === runningIndex;
               const duration = formatDuration(result?.durationMs);
@@ -741,16 +765,14 @@ export function ResumeAnalyzer() {
                 max={SCORE_MAX.overallScore}
                 count
               />
-              <Metric
-                label="ATS score"
-                value={
-                  report.scorecard.atsScore === undefined
-                    ? "Not scored"
-                    : `${report.scorecard.atsScore}`
-                }
-                max={SCORE_MAX.atsScore}
-                count={report.scorecard.atsScore !== undefined}
-              />
+              {report.scorecard.atsScore === undefined ? null : (
+                <Metric
+                  label="ATS score"
+                  value={`${report.scorecard.atsScore}`}
+                  max={SCORE_MAX.atsScore}
+                  count
+                />
+              )}
               <Metric
                 label="Truthfulness confidence"
                 value={`${report.scorecard.truthfulnessConfidence}`}

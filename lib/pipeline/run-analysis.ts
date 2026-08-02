@@ -56,8 +56,12 @@ export async function* streamResumeAnalysis(
 ): AsyncGenerator<AnalysisEvent> {
   const stageResults: StageResult[] = [];
   const targetRole = payload.targetRole?.trim() || "Senior Software Engineer";
+  const jobDescription = payload.jobDescription?.trim() || undefined;
+  const stages = PIPELINE_STAGES.filter(
+    (stage) => stage.id !== "ats-match" || jobDescription
+  );
 
-  for (const [index, stage] of PIPELINE_STAGES.entries()) {
+  for (const [index, stage] of stages.entries()) {
     const startedAt = Date.now();
 
     if (stage.id === "intake") {
@@ -93,7 +97,7 @@ export async function* streamResumeAnalysis(
       yield {
         type: "stage",
         index,
-        total: PIPELINE_STAGES.length,
+        total: stages.length,
         stage: stageResults[stageResults.length - 1]
       };
       continue;
@@ -102,7 +106,7 @@ export async function* streamResumeAnalysis(
     try {
       const prompt = STAGE_PROMPTS[stage.id]({
         resumeText: payload.resumeText,
-        jobDescription: payload.jobDescription,
+        jobDescription,
         targetRole
       });
 
@@ -130,7 +134,7 @@ export async function* streamResumeAnalysis(
     yield {
       type: "stage",
       index,
-      total: PIPELINE_STAGES.length,
+      total: stages.length,
       stage: stageResults[stageResults.length - 1]
     };
   }
@@ -154,7 +158,7 @@ export async function* streamResumeAnalysis(
       createdAt: new Date().toISOString(),
       roleTarget: targetRole,
       resumeText: payload.resumeText,
-      jobDescription: payload.jobDescription,
+      jobDescription,
       scorecard: buildScorecard(stageResults),
       stageResults,
       topImprovements,

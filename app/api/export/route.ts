@@ -32,11 +32,11 @@ Created at: ${report.createdAt}
 ## Scorecard
 
 - Overall: ${report.scorecard.overallScore} / ${SCORE_MAX.overallScore}
-- ATS: ${
-    report.scorecard.atsScore === undefined
-      ? "not scored"
-      : `${report.scorecard.atsScore} / ${SCORE_MAX.atsScore}`
-  }
+${
+  report.scorecard.atsScore === undefined
+    ? ""
+    : `- ATS: ${report.scorecard.atsScore} / ${SCORE_MAX.atsScore}\n`
+}
 - Truthfulness confidence: ${report.scorecard.truthfulnessConfidence} / ${SCORE_MAX.truthfulnessConfidence}
 - Interview readiness: ${report.scorecard.interviewReadiness} / ${SCORE_MAX.interviewReadiness}
 
