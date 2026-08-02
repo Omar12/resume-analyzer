@@ -22,7 +22,7 @@ import {
 } from "@/lib/types";
 import { Card, Pill, cn } from "@/components/ui";
 
-type ExportFormat = "json" | "markdown";
+type ExportFormat = "json" | "markdown" | "resume-markdown";
 type RunState = "idle" | "running" | "done" | "error";
 
 const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024;
@@ -390,7 +390,12 @@ export function ResumeAnalyzer() {
       const url = URL.createObjectURL(await response.blob());
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = format === "json" ? "resume-analysis.json" : "resume-analysis.md";
+      anchor.download =
+        format === "json"
+          ? "resume-analysis.json"
+          : format === "resume-markdown"
+            ? "resume.md"
+            : "resume-analysis.md";
       document.body.append(anchor);
       anchor.click();
       anchor.remove();
@@ -840,6 +845,12 @@ export function ResumeAnalyzer() {
             </div>
             {/* Export sits with the finished report, not back up in the form. */}
             <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => handleExport("resume-markdown")}
+                className="rounded-full border border-black/10 bg-white/70 px-5 py-3 text-sm font-semibold outline-none transition hover:border-black/25 focus-visible:ring-2 focus-visible:ring-rust/50"
+              >
+                Download resume (.md)
+              </button>
               <button
                 onClick={() => handleExport("markdown")}
                 className="rounded-full border border-black/10 bg-white/70 px-5 py-3 text-sm font-semibold outline-none transition hover:border-black/25 focus-visible:ring-2 focus-visible:ring-rust/50"

@@ -5,7 +5,7 @@ import { AnalysisReport } from "@/lib/types";
 
 const requestSchema = z.object({
   report: z.any(),
-  format: z.enum(["json", "markdown"])
+  format: z.enum(["json", "markdown", "resume-markdown"])
 });
 
 export async function POST(request: NextRequest) {
@@ -16,6 +16,19 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type": "application/json",
         "Content-Disposition": "attachment; filename=resume-analysis.json"
+      }
+    });
+  }
+
+  if (format === "resume-markdown") {
+    const resumeText = z
+      .object({ resumeText: z.string() })
+      .parse(report).resumeText;
+
+    return new NextResponse(resumeText, {
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Content-Disposition": "attachment; filename=resume.md"
       }
     });
   }
