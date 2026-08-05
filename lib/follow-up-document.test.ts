@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseFollowUpMarkdown } from "./follow-up-document.ts";
+import { buildResumeMarkdown, parseFollowUpMarkdown } from "./follow-up-document.ts";
 
 const resume = `Taylor Example
 Senior Software Engineer
@@ -63,4 +63,20 @@ test("rejects ordinary Markdown and workbooks without a substantive updated resu
     parseFollowUpMarkdown("# Resume Analysis Follow-up Workbook\n\n## Updated resume\n\nToo short"),
     null
   );
+});
+
+test("exports the rewritten resume, including its summary, when available", () => {
+  const rewrittenResume = `## Summary
+
+Evidence-based software engineer summary.
+
+## Experience
+
+- Built reliable systems.`;
+
+  assert.equal(
+    buildResumeMarkdown({ resumeText: resume, rewriteDraft: rewrittenResume }),
+    rewrittenResume
+  );
+  assert.equal(buildResumeMarkdown({ resumeText: resume, rewriteDraft: "  " }), resume);
 });

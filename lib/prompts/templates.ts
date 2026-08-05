@@ -70,6 +70,7 @@ ${baseGuardrails}
 Task: Rewrite the resume for a ${context.targetRole} while staying strictly truthful.
 Do not add content that is not explicitly supported by the resume.
 You may improve wording, ordering, compression, headings, and action verbs.
+Include a concise, evidence-based Markdown Summary section (headed ## Summary) at the top of the rewritten resume.
 Where evidence is missing, preserve the statement and flag gaps with short bracketed notes.
 Return JSON with summary, findings, followUpQuestions, guardrail, and rawMarkdown containing the rewritten resume in Markdown.
 `

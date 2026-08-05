@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { buildFollowUpMarkdown } from "@/lib/follow-up-document";
+import { buildFollowUpMarkdown, buildResumeMarkdown } from "@/lib/follow-up-document";
 import { AnalysisReport } from "@/lib/types";
 
 const requestSchema = z.object({
@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
   }
 
   if (format === "resume-markdown") {
-    const resumeText = z
-      .object({ resumeText: z.string() })
-      .parse(report).resumeText;
+    const resumeText = buildResumeMarkdown(
+      z.object({ resumeText: z.string(), rewriteDraft: z.string() }).parse(report)
+    );
 
     return new NextResponse(resumeText, {
       headers: {

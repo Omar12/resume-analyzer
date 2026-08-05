@@ -886,11 +886,19 @@ export function ResumeAnalyzer() {
           ) : null}
 
           <Card className="p-6 md:p-8">
+            <div className="mb-6 max-w-[70ch]">
+              <h3 className="font-display text-2xl">Scorecard</h3>
+              <p className="mt-2 text-sm leading-6 text-black/70">
+                These are diagnostic scores calculated from the analysis findings, not
+                percentages or predictions. The notes below explain what each score reflects.
+              </p>
+            </div>
             <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
               <Metric
                 label="Overall score"
                 value={`${report.scorecard.overallScore}`}
                 max={SCORE_MAX.overallScore}
+                description="A combined view of the strategic issues found across the analysis. Higher-severity findings reduce this score more."
                 count
               />
               {report.scorecard.atsScore === undefined ? null : (
@@ -898,6 +906,7 @@ export function ResumeAnalyzer() {
                   label="ATS score"
                   value={`${report.scorecard.atsScore}`}
                   max={SCORE_MAX.atsScore}
+                  description="How closely your resume matches the job description. It is based on the issues found in the ATS comparison."
                   count
                 />
               )}
@@ -905,12 +914,14 @@ export function ResumeAnalyzer() {
                 label="Truthfulness confidence"
                 value={`${report.scorecard.truthfulnessConfidence}`}
                 max={SCORE_MAX.truthfulnessConfidence}
+                description="How well the resume's claims are supported by its own evidence. Claims needing verification lower this score."
                 count
               />
               <Metric
                 label="Interview readiness"
                 value={`${report.scorecard.interviewReadiness}`}
                 max={SCORE_MAX.interviewReadiness}
+                description="How prepared the resume leaves you to explain and defend your experience in an interview."
                 count
               />
             </div>
@@ -1202,11 +1213,13 @@ function Metric({
   label,
   value,
   max,
+  description,
   count = false
 }: {
   label: string;
   value: string;
   max: number;
+  description: string;
   count?: boolean;
 }) {
   const numeric = count ? Number(value) : Number.NaN;
@@ -1232,6 +1245,7 @@ function Metric({
           </span>
         ) : null}
       </p>
+      <p className="mt-3 max-w-[30ch] text-sm leading-5 text-black/65">{description}</p>
     </div>
   );
 }

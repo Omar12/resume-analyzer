@@ -35,6 +35,16 @@ export interface FollowUpWorkbook {
   analysisSnapshot?: string;
 }
 
+/**
+ * The rewrite is the resume-ready output of the analysis. If that stage was
+ * unavailable, retain the submitted resume rather than manufacturing content.
+ */
+export function buildResumeMarkdown(
+  report: Pick<AnalysisReport, "resumeText" | "rewriteDraft">
+) {
+  return report.rewriteDraft.trim() || report.resumeText;
+}
+
 export function buildFollowUpMarkdown(report: AnalysisReport) {
   const suggestions = report.topImprovements
     .map(
